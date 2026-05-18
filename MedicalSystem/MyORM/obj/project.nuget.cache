@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "oVHCm9jfBIQ=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\filip\\Desktop\\PPPK_Project\\MedicalSystem\\MyORM\\MyORM.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\filip\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.0\\microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\filip\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.0\\microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\filip\\.nuget\\packages\\npgsql\\8.0.3\\npgsql.8.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

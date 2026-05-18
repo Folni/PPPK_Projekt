@@ -6,7 +6,7 @@ using MyORM.Migrations;
 
 // ─── Connection string ────────────────────────────────────────────────────────
 const string connectionString =
-    "Host=localhost;Port=5432;Database=medical_db;Username=admin;Password=admin123;";
+    "Host=localhost;Port=5432;Database=medical_db;Username=admin;";
 
 Console.WriteLine("╔════════════════════════════════════════════╗");
 Console.WriteLine("║        MEDICINSKI SUSTAV  v1.0             ║");

@@ -1,0 +1,13 @@
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\bin\Debug\net10.0\MyORM.deps.json
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\bin\Debug\net10.0\MyORM.dll
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\bin\Debug\net10.0\MyORM.pdb
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\MyORM.csproj.AssemblyReference.cache
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\MyORM.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\MyORM.AssemblyInfoInputs.cache
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\MyORM.AssemblyInfo.cs
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\MyORM.csproj.CoreCompileInputs.cache
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\MyORM.sourcelink.json
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\MyORM.dll
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\refint\MyORM.dll
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\MyORM.pdb
+C:\Users\filip\Desktop\PPPK_Project\MedicalSystem\MyORM\obj\Debug\net10.0\ref\MyORM.dll
