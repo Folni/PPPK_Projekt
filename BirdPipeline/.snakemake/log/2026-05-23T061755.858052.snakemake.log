@@ -1,0 +1,75 @@
+Assuming unrestricted shared filesystem usage.
+host: Nitric
+Building DAG of jobs...
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job         count
+--------  -------
+taxonomy        1
+audio           1
+kafka           1
+report          1
+all             1
+total           5
+
+Select jobs to execute...
+Execute 1 jobs...
+[Sat May 23 06:17:55 2026]
+localrule taxonomy:
+    output: output/.done_taxonomy
+    jobid: 3
+    reason: Forced execution
+    resources: tmpdir=C:\Users\filip\AppData\Local\Temp
+Touching output file output/.done_taxonomy.
+[Sat May 23 06:17:57 2026]
+Finished jobid: 3 (Rule: taxonomy)
+1 of 5 steps (20%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Sat May 23 06:17:57 2026]
+localrule kafka:
+    input: output/.done_taxonomy
+    output: output/.done_kafka
+    jobid: 4
+    reason: Forced execution
+    resources: tmpdir=C:\Users\filip\AppData\Local\Temp
+Select jobs to execute...
+Touching output file output/.done_kafka.
+[Sat May 23 06:17:57 2026]
+Finished jobid: 4 (Rule: kafka)
+2 of 5 steps (40%) done
+Execute 1 jobs...
+[Sat May 23 06:17:57 2026]
+localrule audio:
+    input: output/.done_taxonomy
+    output: output/.done_audio
+    jobid: 2
+    reason: Forced execution
+    resources: tmpdir=C:\Users\filip\AppData\Local\Temp
+RuleException:
+CalledProcessError in file "C:\Users\filip\Desktop\PPPK_Project\BirdPipeline\Snakefile", line 40:
+Command 'python scripts/step3_audio.py' returned non-zero exit status 1.
+[Sat May 23 06:17:57 2026]
+Error in rule audio:
+    message: None
+    jobid: 2
+    input: output/.done_taxonomy
+    output: output/.done_audio
+    shell:
+        python scripts/step3_audio.py
+        (command exited with non-zero exit code)
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look below for error messages
+[Sat May 23 06:17:57 2026]
+Error in rule audio:
+    message: None
+    jobid: 2
+    input: output/.done_taxonomy
+    output: output/.done_audio
+    shell:
+        python scripts/step3_audio.py
+        (command exited with non-zero exit code)
+Complete log(s): C:\Users\filip\Desktop\PPPK_Project\BirdPipeline\.snakemake\log\2026-05-23T061755.858052.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.

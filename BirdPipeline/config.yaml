@@ -1,0 +1,36 @@
+# BirdPipeline configuration
+
+mongodb:
+  uri: "mongodb://localhost:27017"
+  database: "bird_pipeline"
+  collections:
+    taxonomy: "taxonomy"
+    observations: "observations"
+    classifications: "classifications"
+
+minio:
+  endpoint: "localhost:9000"
+  access_key: "minioadmin"
+  secret_key: "minioadmin"
+  secure: false
+  buckets:
+    audio: "audio-files"
+    logs: "classification-logs"
+
+kafka:
+  bootstrap_servers: "localhost:9092"
+  topic: "bird-observations"
+  group_id: "bird-pipeline-group"
+
+aves_api:
+  base_url: "https://aves.regoch.net"
+  classify_endpoint: "/api/classify"
+
+pipeline:
+  audio_dir: "audio"
+  output_dir: "output"
+  output_file: "bird_report.csv"
+  # Optional: fuzzy filter species name (leave empty for no filter)
+  species_filter: ""
+  # Fuzzy match threshold (0-100)
+  fuzzy_threshold: 70

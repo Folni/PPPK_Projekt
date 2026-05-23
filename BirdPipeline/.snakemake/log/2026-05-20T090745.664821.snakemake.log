@@ -1,0 +1,81 @@
+Assuming unrestricted shared filesystem usage.
+host: Nitric
+Building DAG of jobs...
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job         count
+--------  -------
+taxonomy        1
+audio           1
+kafka           1
+report          1
+all             1
+total           5
+
+Select jobs to execute...
+Execute 1 jobs...
+[Wed May 20 09:07:45 2026]
+localrule taxonomy:
+    output: output/.done_taxonomy
+    jobid: 3
+    reason: Forced execution
+    resources: tmpdir=C:\Users\filip\AppData\Local\Temp
+Touching output file output/.done_taxonomy.
+[Wed May 20 09:07:47 2026]
+Finished jobid: 3 (Rule: taxonomy)
+1 of 5 steps (20%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Wed May 20 09:07:47 2026]
+localrule audio:
+    input: output/.done_taxonomy
+    output: output/.done_audio
+    jobid: 2
+    reason: Forced execution
+    resources: tmpdir=C:\Users\filip\AppData\Local\Temp
+Select jobs to execute...
+Touching output file output/.done_audio.
+[Wed May 20 09:07:51 2026]
+Finished jobid: 2 (Rule: audio)
+2 of 5 steps (40%) done
+Execute 1 jobs...
+[Wed May 20 09:07:51 2026]
+localrule kafka:
+    input: output/.done_taxonomy
+    output: output/.done_kafka
+    jobid: 4
+    reason: Forced execution
+    resources: tmpdir=C:\Users\filip\AppData\Local\Temp
+Touching output file output/.done_kafka.
+[Wed May 20 09:08:01 2026]
+Finished jobid: 4 (Rule: kafka)
+3 of 5 steps (60%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Wed May 20 09:08:01 2026]
+localrule report:
+    input: output/.done_audio, output/.done_kafka
+    output: output/bird_report.csv
+    jobid: 1
+    reason: Forced execution
+    resources: tmpdir=C:\Users\filip\AppData\Local\Temp
+Waiting at most 5 seconds for missing files:
+output/bird_report.csv (missing locally)
+MissingOutputException in rule report in file "C:\Users\filip\Desktop\PPPK_Project\BirdPipeline\Snakefile", line 64:
+Job 1  completed successfully, but some output files are missing. Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+output/bird_report.csv (missing locally, parent dir contents: .done_audio, .done_kafka, .done_taxonomy)
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look below for error messages
+[Wed May 20 09:08:08 2026]
+Error in rule report:
+    message: None
+    jobid: 1
+    input: output/.done_audio, output/.done_kafka
+    output: output/bird_report.csv
+    shell:
+        python scripts/step4_report.py --filter ''
+        (command exited with non-zero exit code)
+Complete log(s): C:\Users\filip\Desktop\PPPK_Project\BirdPipeline\.snakemake\log\2026-05-20T090745.664821.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.

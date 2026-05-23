@@ -1,0 +1,47 @@
+Assuming unrestricted shared filesystem usage.
+host: Nitric
+Building DAG of jobs...
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job         count
+--------  -------
+taxonomy        1
+audio           1
+kafka           1
+report          1
+all             1
+total           5
+
+Select jobs to execute...
+Execute 1 jobs...
+[Wed May 20 09:05:39 2026]
+localrule taxonomy:
+    output: output/.done_taxonomy
+    jobid: 3
+    reason: Forced execution
+    resources: tmpdir=C:\Users\filip\AppData\Local\Temp
+RuleException:
+CalledProcessError in file "C:\Users\filip\Desktop\PPPK_Project\BirdPipeline\Snakefile", line 39:
+Command 'python scripts/step1_taxonomy.py' returned non-zero exit status 1.
+[Wed May 20 09:05:40 2026]
+Error in rule taxonomy:
+    message: None
+    jobid: 3
+    output: output/.done_taxonomy
+    shell:
+        python scripts/step1_taxonomy.py
+        (command exited with non-zero exit code)
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look below for error messages
+[Wed May 20 09:05:41 2026]
+Error in rule taxonomy:
+    message: None
+    jobid: 3
+    output: output/.done_taxonomy
+    shell:
+        python scripts/step1_taxonomy.py
+        (command exited with non-zero exit code)
+Complete log(s): C:\Users\filip\Desktop\PPPK_Project\BirdPipeline\.snakemake\log\2026-05-20T090539.100674.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.

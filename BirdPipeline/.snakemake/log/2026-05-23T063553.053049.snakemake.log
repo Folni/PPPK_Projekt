@@ -1,0 +1,4 @@
+SyntaxError in file "C:\Users\filip\Desktop\PPPK_Project\BirdPipeline\Snakefile", line 46:
+invalid syntax:
+	shell ( , bench_record=bench_record, bench_iteration=bench_iteration
+

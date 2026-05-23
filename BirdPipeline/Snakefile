@@ -1,0 +1,58 @@
+import os
+
+configfile: "config.yaml"
+
+DONE_TAXONOMY = "output/.done_taxonomy"
+DONE_KAFKA    = "output/.done_kafka"
+DONE_AUDIO    = "output/.done_audio"
+REPORT_CSV    = os.path.join(config["pipeline"]["output_dir"], config["pipeline"]["output_file"])
+REPORT_PNG    = REPORT_CSV.replace(".csv", ".png")
+
+# Read species_filter from top-level config (command line override works here)
+SPECIES_FILTER = config.get("species_filter", "")
+
+rule all:
+    input:
+        REPORT_CSV,
+        REPORT_PNG
+
+rule taxonomy:
+    output:
+        touch(DONE_TAXONOMY)
+    shell:
+        "python scripts/step1_taxonomy.py"
+
+rule kafka:
+    input:
+        DONE_TAXONOMY
+    output:
+        touch(DONE_KAFKA)
+    shell:
+        "python scripts/step2_kafka.py"
+
+rule audio:
+    input:
+        DONE_TAXONOMY
+    output:
+        touch(DONE_AUDIO)
+    shell:
+        "python scripts/step3_audio.py"
+
+rule report:
+    input:
+        DONE_AUDIO,
+        DONE_KAFKA
+    output:
+        REPORT_CSV
+    params:
+        filter = SPECIES_FILTER
+    shell:
+        'python scripts/step4_report.py --filter "{params.filter}"'
+
+rule visualize:
+    input:
+        REPORT_CSV
+    output:
+        REPORT_PNG
+    shell:
+        "python scripts/step5_visualize.py"
