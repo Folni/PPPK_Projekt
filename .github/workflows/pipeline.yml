@@ -1,0 +1,109 @@
+name: Bird Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      species_filter:
+        description: 'Fuzzy species name filter (leave empty for all species)'
+        required: false
+        default: ''
+      fuzzy_threshold:
+        description: 'Fuzzy match threshold (0-100)'
+        required: false
+        default: '70'
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
+      minio:
+        image: minio/minio
+        ports:
+          - 9000:9000
+          - 9001:9001
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      zookeeper:
+        image: confluentinc/cp-zookeeper:7.5.0
+        ports:
+          - 2181:2181
+        env:
+          ZOOKEEPER_CLIENT_PORT: 2181
+          ZOOKEEPER_TICK_TIME: 2000
+
+      kafka:
+        image: confluentinc/cp-kafka:7.5.0
+        ports:
+          - 9092:9092
+        env:
+          KAFKA_BROKER_ID: 1
+          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Wait for Kafka to be ready
+        run: |
+          echo "Waiting for Kafka..."
+          for i in $(seq 1 30); do
+            if python - <<'EOF'
+          from kafka import KafkaAdminClient
+          try:
+              client = KafkaAdminClient(bootstrap_servers="localhost:9092", request_timeout_ms=3000)
+              client.close()
+              print("Kafka is ready")
+              exit(0)
+          except Exception as e:
+              exit(1)
+          EOF
+            then
+              break
+            fi
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+
+      - name: Seed Kafka test messages
+        run: python scripts/step2_kafka.py --seed
+
+      - name: Run pipeline
+        run: |
+          snakemake --cores 1 --config \
+            species_filter="${{ github.event.inputs.species_filter }}" \
+            fuzzy_threshold="${{ github.event.inputs.fuzzy_threshold }}"
+
+      - name: Upload Report and Visualization
+        uses: actions/upload-artifact@v4
+        with:
+          name: bird-pipeline-results
+          path: |
+            output/bird_report.csv
+            output/bird_report.png
