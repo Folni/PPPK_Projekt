@@ -4,5 +4,7 @@ kafka-python==2.0.2
 requests==2.31.0
 pyyaml==6.0.1
 pandas==2.2.2
+matplotlib==3.9.0
 thefuzz==0.22.1
 python-levenshtein==0.25.1
+snakemake==8.20.5

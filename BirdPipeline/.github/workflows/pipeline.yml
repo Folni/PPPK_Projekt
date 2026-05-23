@@ -52,8 +52,11 @@ jobs:
           KAFKA_BROKER_ID: 1
           KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
           KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
           KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
     steps:
       - name: Checkout repository
@@ -65,12 +68,28 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install snakemake pandas matplotlib
+        run: pip install -r requirements.txt
 
-      - name: Wait for services
-        run: sleep 20
+      - name: Wait for Kafka to be ready
+        run: |
+          echo "Waiting for Kafka..."
+          for i in $(seq 1 30); do
+            if python - <<'EOF'
+          from kafka import KafkaAdminClient
+          try:
+              client = KafkaAdminClient(bootstrap_servers="localhost:9092", request_timeout_ms=3000)
+              client.close()
+              print("Kafka is ready")
+              exit(0)
+          except Exception as e:
+              exit(1)
+          EOF
+            then
+              break
+            fi
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
 
       - name: Seed Kafka test messages
         run: python scripts/step2_kafka.py --seed

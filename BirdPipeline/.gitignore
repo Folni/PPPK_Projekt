@@ -1,0 +1,19 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Snakemake
+.snakemake/
+
+# Output (generated files)
+output/
+!output/.gitkeep
+
+# Large data files
+aves.json
+
+# OS
+.DS_Store
+Thumbs.db
