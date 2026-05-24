@@ -22,47 +22,44 @@ jobs:
         ports:
           - 27017:27017
 
-      zookeeper:
-        image: confluentinc/cp-zookeeper:7.5.0
-        ports:
-          - 2181:2181
-        env:
-          ZOOKEEPER_CLIENT_PORT: 2181
-          ZOOKEEPER_TICK_TIME: 2000
-
-      kafka:
-        image: confluentinc/cp-kafka:7.5.0
-        ports:
-          - 9092:9092
-        env:
-          KAFKA_BROKER_ID: 1
-          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Start MinIO
         run: |
-          docker run -d \
-            --name minio \
-            -p 9000:9000 -p 9001:9001 \
+          docker run -d --name minio --network host \
             -e MINIO_ROOT_USER=minioadmin \
             -e MINIO_ROOT_PASSWORD=minioadmin \
             minio/minio server /data --console-address ":9001"
           for i in $(seq 1 20); do
             if curl -sf http://localhost:9000/minio/health/live; then
-              echo "MinIO ready"
-              break
+              echo "MinIO ready"; break
             fi
             sleep 3
           done
+
+      - name: Start Zookeeper
+        run: |
+          docker run -d --name zookeeper --network host \
+            -e ZOOKEEPER_CLIENT_PORT=2181 \
+            -e ZOOKEEPER_TICK_TIME=2000 \
+            confluentinc/cp-zookeeper:7.5.0
+          sleep 15
+
+      - name: Start Kafka
+        run: |
+          docker run -d --name kafka --network host \
+            -e KAFKA_BROKER_ID=1 \
+            -e KAFKA_ZOOKEEPER_CONNECT=localhost:2181 \
+            -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT \
+            -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 \
+            -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 \
+            -e KAFKA_AUTO_CREATE_TOPICS_ENABLE=true \
+            -e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT \
+            confluentinc/cp-kafka:7.5.0
+          sleep 15
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -71,27 +68,6 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r BirdPipeline/requirements.txt
-
-      - name: Wait for Kafka
-        run: |
-          echo "Waiting for Kafka..."
-          for i in $(seq 1 30); do
-            if python - <<'PYEOF'
-          from kafka import KafkaAdminClient
-          try:
-              client = KafkaAdminClient(bootstrap_servers="localhost:9092", request_timeout_ms=3000)
-              client.close()
-              exit(0)
-          except:
-              exit(1)
-          PYEOF
-            then
-              echo "Kafka ready"
-              break
-            fi
-            echo "Attempt $i failed, retrying in 5s..."
-            sleep 5
-          done
 
       - name: Seed Kafka test messages
         run: python BirdPipeline/scripts/step2_kafka.py --seed
