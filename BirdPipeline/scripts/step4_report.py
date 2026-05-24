@@ -275,4 +275,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate bird observation report")
     parser.add_argument("--filter", type=str, default="", help="Fuzzy species name filter")
     args = parser.parse_args()
-    run(species_filter=args.filter if args.filter else None)
+    sf = args.filter.strip() if args.filter else ""
+    sf = "" if sf.lower() in ("none", "null") else sf
+    run(species_filter=sf if sf else None)

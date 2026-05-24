@@ -9,7 +9,8 @@ REPORT_CSV    = os.path.join(config["pipeline"]["output_dir"], config["pipeline"
 REPORT_PNG    = REPORT_CSV.replace(".csv", ".png")
 
 # Read species_filter from top-level config (command line override works here)
-SPECIES_FILTER = config.get("species_filter", "")
+_sf = str(config.get("species_filter", "") or "")
+SPECIES_FILTER = "" if _sf.strip().lower() in ("none", "null", "") else _sf.strip()
 
 rule all:
     input:
