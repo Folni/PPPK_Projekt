@@ -11,9 +11,6 @@ __pycache__/
 output/
 !output/.gitkeep
 
-# Large data files
-aves.json
-
 # OS
 .DS_Store
 Thumbs.db
