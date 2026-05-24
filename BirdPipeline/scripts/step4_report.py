@@ -120,6 +120,8 @@ def aggregate_report(classifications: list[dict], taxonomy: dict) -> dict:
         "lastObserved": None,
     })
 
+    taxonomy_by_canonical = {v.get("canonicalName", ""): v for v in taxonomy.values() if v.get("canonicalName")}
+
     for doc in classifications:
         detected = extract_detected_species(doc.get("classificationResult", {}))
         classified_at = doc.get("classifiedAt")
@@ -135,7 +137,7 @@ def aggregate_report(classifications: list[dict], taxonomy: dict) -> dict:
                 continue
 
             confidence = float(species_result.get("confidence", 0.0))
-            tax_data = taxonomy.get(sci_name, {})
+            tax_data = taxonomy.get(sci_name) or taxonomy_by_canonical.get(sci_name, {})
 
             stats = species_stats[sci_name]
             stats["scientificName"] = sci_name
