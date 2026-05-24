@@ -29,6 +29,12 @@ jobs:
         env:
           ZOOKEEPER_CLIENT_PORT: 2181
           ZOOKEEPER_TICK_TIME: 2000
+        options: >-
+          --health-cmd "echo ruok | nc localhost 2181 | grep imok"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 20s
 
       kafka:
         image: confluentinc/cp-kafka:7.5.0
@@ -43,6 +49,12 @@ jobs:
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
           KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
           KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+        options: >-
+          --health-cmd "kafka-topics --bootstrap-server localhost:9092 --list"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 30s
 
     steps:
       - name: Checkout repository
@@ -72,27 +84,6 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r BirdPipeline/requirements.txt
-
-      - name: Wait for Kafka to be ready
-        run: |
-          echo "Waiting for Kafka..."
-          for i in $(seq 1 30); do
-            if python - <<'PYEOF'
-          from kafka import KafkaAdminClient
-          try:
-              client = KafkaAdminClient(bootstrap_servers="localhost:9092", request_timeout_ms=3000)
-              client.close()
-              exit(0)
-          except:
-              exit(1)
-          PYEOF
-            then
-              echo "Kafka is ready"
-              break
-            fi
-            echo "Attempt $i failed, retrying in 5s..."
-            sleep 5
-          done
 
       - name: Seed Kafka test messages
         run: python BirdPipeline/scripts/step2_kafka.py --seed
