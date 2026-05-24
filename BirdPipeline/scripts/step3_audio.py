@@ -28,30 +28,23 @@ from io import BytesIO
 from utils import load_config, get_mongodb_client, get_minio_client, ensure_minio_bucket
 
 
-# Default location for all audio files (Zagreb)
 DEFAULT_LATITUDE = 45.8150
 DEFAULT_LONGITUDE = 15.9819
 
 
 def upload_audio_to_minio(minio_client, bucket: str, file_path: Path) -> str:
-    """
-    Upload audio file to MinIO.
-    Returns the object name (unique key) used to identify the file.
-    """
-    # Generate unique object name: sha256 hash of content + original filename
     with open(file_path, "rb") as f:
         content = f.read()
 
     file_hash = hashlib.sha256(content).hexdigest()[:16]
     object_name = f"{file_hash}_{file_path.name}"
 
-    # Check if already uploaded
     try:
         minio_client.stat_object(bucket, object_name)
         print(f"  [MinIO] Already exists: {object_name} – skipping upload.")
         return object_name
     except Exception:
-        pass  # Not found, proceed with upload
+        pass
 
     minio_client.put_object(
         bucket_name=bucket,
@@ -65,10 +58,6 @@ def upload_audio_to_minio(minio_client, bucket: str, file_path: Path) -> str:
 
 
 def classify_audio(api_url: str, file_path: Path) -> dict:
-    """
-    Send audio file to classification API.
-    Returns the classification response.
-    """
     with open(file_path, "rb") as f:
         files = {"file": (file_path.name, f, "audio/wav")}
         response = requests.post(api_url, files=files, timeout=30)
@@ -81,10 +70,6 @@ def classify_audio(api_url: str, file_path: Path) -> dict:
 
 
 def store_classification_log(minio_client, bucket: str, log_data: dict) -> str:
-    """
-    Store request/response log as JSON in MinIO.
-    Returns the log object name.
-    """
     log_id = str(uuid.uuid4())
     object_name = f"log_{log_id}.json"
     log_bytes = json.dumps(log_data, indent=2, default=str).encode("utf-8")
@@ -103,13 +88,9 @@ def store_classification_log(minio_client, bucket: str, log_data: dict) -> str:
 def store_classification_result(db, collection_name: str, taxonomy_collection_name: str,
                                  file_name: str, object_name: str, log_object_name: str,
                                  classification: dict, latitude: float, longitude: float):
-    """
-    Store classification result in MongoDB, linking to taxonomy data.
-    """
     collection = db[collection_name]
     taxonomy_col = db[taxonomy_collection_name]
 
-    # Link to taxonomy: try to find species by scientificName from classification
     species_data = None
     detected_species = classification.get("species") or classification.get("results", [])
 
@@ -118,12 +99,12 @@ def store_classification_result(db, collection_name: str, taxonomy_collection_na
         sci_name = top_species.get("scientificName") or top_species.get("species")
         if sci_name:
             species_data = taxonomy_col.find_one({
-    "$or": [
-        {"scientificName": sci_name},
-        {"canonicalName": sci_name},
-        {"species": sci_name}
-    ]
-})
+                "$or": [
+                    {"canonicalName": sci_name},
+                    {"scientificName": sci_name},
+                    {"species": sci_name}
+                ]
+            })
 
     doc = {
         "fileName": file_name,
@@ -135,8 +116,11 @@ def store_classification_result(db, collection_name: str, taxonomy_collection_na
         "taxonomyId": species_data["_id"] if species_data else None,
         "taxonomyData": {
             "scientificName": species_data.get("scientificName") if species_data else None,
-            "vernacularName": species_data.get("vernacularName") if species_data else None,
-            "taxonKey": species_data.get("taxonKey") if species_data else None,
+            "canonicalName": species_data.get("canonicalName") if species_data else None,
+            "vernacularName": species_data.get("vernacularNameEng") if species_data else None,
+            "taxonKey": species_data.get("key") if species_data else None,
+            "order": species_data.get("order") if species_data else None,
+            "family": species_data.get("family") if species_data else None,
         } if species_data else None,
         "classifiedAt": datetime.utcnow(),
     }
@@ -146,17 +130,11 @@ def store_classification_result(db, collection_name: str, taxonomy_collection_na
 
 
 def create_dummy_audio_files(audio_dir: Path):
-    """Create dummy audio files for testing if directory is empty."""
     audio_dir.mkdir(parents=True, exist_ok=True)
-    dummy_files = [
-        "recording_001.wav",
-        "recording_002.wav",
-        "morning_birds.wav",
-    ]
+    dummy_files = ["recording_001.wav", "recording_002.wav", "morning_birds.wav"]
     for fname in dummy_files:
         fpath = audio_dir / fname
         if not fpath.exists():
-            # Write minimal WAV header for a valid (but silent) WAV file
             with open(fpath, "wb") as f:
                 f.write(b"RIFF$\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00"
                         b"D\xac\x00\x00\x88X\x01\x00\x02\x00\x10\x00data\x00\x00\x00\x00")
@@ -169,18 +147,15 @@ def run(config_path: str = None, latitude: float = None, longitude: float = None
     lat = latitude or DEFAULT_LATITUDE
     lon = longitude or DEFAULT_LONGITUDE
 
-    # Setup clients
     minio_client = get_minio_client(config)
     mongo_client = get_mongodb_client(config)
     db = mongo_client[config["mongodb"]["database"]]
 
-    # Ensure MinIO buckets exist
     audio_bucket = config["minio"]["buckets"]["audio"]
     log_bucket = config["minio"]["buckets"]["logs"]
     ensure_minio_bucket(minio_client, audio_bucket)
     ensure_minio_bucket(minio_client, log_bucket)
 
-    # Find audio files
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     audio_dir = Path(base_dir) / config["pipeline"]["audio_dir"]
 
@@ -202,10 +177,8 @@ def run(config_path: str = None, latitude: float = None, longitude: float = None
     for audio_file in audio_files:
         print(f"\n  Processing: {audio_file.name}")
 
-        # 1. Upload to MinIO
         object_name = upload_audio_to_minio(minio_client, audio_bucket, audio_file)
 
-        # 2. Call classification API
         try:
             classification = classify_audio(classify_url, audio_file)
             if "error" in classification:
@@ -215,7 +188,6 @@ def run(config_path: str = None, latitude: float = None, longitude: float = None
             print(f"  [API] Error calling classifier: {e}")
             classification = _mock_classification(audio_file.name)
 
-        # 3. Store log in MinIO
         log_data = {
             "request": {
                 "url": classify_url,
@@ -228,7 +200,6 @@ def run(config_path: str = None, latitude: float = None, longitude: float = None
         }
         log_object_name = store_classification_log(minio_client, log_bucket, log_data)
 
-        # 4. Store result in MongoDB
         store_classification_result(
             db=db,
             collection_name=config["mongodb"]["collections"]["classifications"],
@@ -246,21 +217,24 @@ def run(config_path: str = None, latitude: float = None, longitude: float = None
 
 
 def _mock_classification(filename: str) -> dict:
-    """Mock classification response for testing when API is unavailable."""
+    """Mock classification using real species from aves.json taxonomy."""
     import random
+
+    # Real species from aves.json
     species_pool = [
-        {"scientificName": "Parus major", "vernacularName": "Great Tit", "confidence": 0.92},
-        {"scientificName": "Turdus merula", "vernacularName": "Common Blackbird", "confidence": 0.87},
-        {"scientificName": "Erithacus rubecula", "vernacularName": "European Robin", "confidence": 0.78},
-        {"scientificName": "Passer domesticus", "vernacularName": "House Sparrow", "confidence": 0.85},
-        {"scientificName": "Hirundo rustica", "vernacularName": "Barn Swallow", "confidence": 0.91},
+        {"scientificName": "Guttera pucherani", "vernacularName": "Crested Guineafowl", "confidence": 0.92},
+        {"scientificName": "Numida meleagris", "vernacularName": "Helmeted Guineafowl", "confidence": 0.87},
+        {"scientificName": "Agelastes meleagrides", "vernacularName": "White-breasted Guineafowl", "confidence": 0.78},
+        {"scientificName": "Perdicula asiatica", "vernacularName": "Jungle Bush Quail", "confidence": 0.85},
+        {"scientificName": "Acryllium vulturinum", "vernacularName": "Vulturine Guineafowl", "confidence": 0.91},
+        {"scientificName": "Perdicula manipurensis", "vernacularName": "Manipur Bush Quail", "confidence": 0.83},
     ]
     selected = random.sample(species_pool, k=random.randint(1, 3))
     return {
         "fileName": filename,
         "results": selected,
         "species": selected,
-        "processingTime": round(random.uniform(0.5, 2.5), 3),
+        "processingTime": round(__import__('random').uniform(0.5, 2.5), 3),
         "mock": True,
     }
 

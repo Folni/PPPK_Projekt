@@ -42,7 +42,7 @@ def consume_kafka_messages(config: dict) -> list[dict]:
         auto_offset_reset="earliest",
         enable_auto_commit=True,
         value_deserializer=lambda m: json.loads(m.decode("utf-8")),
-        consumer_timeout_ms=5000,  # Stop after 5s of no messages
+        consumer_timeout_ms=5000,
     )
 
     messages = []
@@ -65,7 +65,6 @@ def store_observations(config: dict, observations: list[dict]):
         client.close()
         return
 
-    # Add ingestion timestamp to each observation
     for obs in observations:
         obs["_ingested_at"] = datetime.utcnow()
 
@@ -76,8 +75,8 @@ def store_observations(config: dict, observations: list[dict]):
 
 def seed_kafka_test_messages(config: dict):
     """
-    Seeds test messages into Kafka for development/testing.
-    Run this manually if you need test data.
+    Seeds test messages into Kafka using real species from aves.json.
+    taxonKey values correspond to actual entries in the taxonomy collection.
     """
     from kafka import KafkaProducer
 
@@ -86,66 +85,66 @@ def seed_kafka_test_messages(config: dict):
         value_serializer=lambda v: json.dumps(v).encode("utf-8"),
     )
 
+    # Real species from aves.json with their actual taxonKey values
     test_observations = [
         {
-            "taxonKey": 1,
-            "scientificName": "Parus major",
+            "taxonKey": 2473325,
+            "scientificName": "Guttera pucherani",
             "latitude": 45.8150,
             "longitude": 15.9819,
-            "bodySize": "small",
-            "bodyTemperature": 41.5,
+            "bodySize": "medium",
+            "bodyTemperature": 41.2,
             "migrationStatus": "resident",
-            "flightPattern": "undulating",
+            "flightPattern": "direct",
             "habitat": "woodland",
             "observedBy": "ornithologist_01",
             "observedAt": "2024-03-15T08:30:00Z"
         },
         {
-            "taxonKey": 2,
-            "scientificName": "Turdus merula",
+            "taxonKey": 2473341,
+            "scientificName": "Numida meleagris",
             "latitude": 45.8200,
             "longitude": 15.9900,
-            "bodySize": "medium",
-            "migrationStatus": "partial migrant",
-            "habitat": "urban garden",
+            "bodySize": "large",
+            "migrationStatus": "resident",
+            "habitat": "savanna",
             "observedBy": "ornithologist_02",
             "observedAt": "2024-03-15T09:15:00Z"
         },
         {
-            "taxonKey": 3,
-            "scientificName": "Erithacus rubecula",
+            "taxonKey": 2473356,
+            "scientificName": "Perdicula asiatica",
             "latitude": 45.7900,
             "longitude": 15.9600,
             "bodySize": "small",
             "bodyTemperature": 42.0,
-            "migrationStatus": "partial migrant",
+            "migrationStatus": "resident",
             "flightPattern": "direct",
-            "habitat": "forest edge",
-            "wingspanCm": 21,
+            "habitat": "grassland",
+            "wingspanCm": 18,
             "observedBy": "ornithologist_01",
             "observedAt": "2024-03-16T07:45:00Z"
         },
         {
-            "taxonKey": 1,
-            "scientificName": "Parus major",
+            "taxonKey": 2473325,
+            "scientificName": "Guttera pucherani",
             "latitude": 45.8300,
             "longitude": 16.0100,
-            "bodySize": "small",
-            "habitat": "park",
-            "nestingBehavior": "cavity nesting",
+            "bodySize": "medium",
+            "habitat": "forest edge",
+            "nestingBehavior": "ground nesting",
             "observedBy": "ornithologist_03",
             "observedAt": "2024-03-17T10:00:00Z"
         },
         {
-            "taxonKey": 9,
-            "scientificName": "Falco tinnunculus",
+            "taxonKey": 2473339,
+            "scientificName": "Acryllium vulturinum",
             "latitude": 45.7500,
             "longitude": 15.9200,
-            "bodySize": "medium",
+            "bodySize": "large",
             "migrationStatus": "resident",
-            "flightPattern": "hovering",
-            "habitat": "open countryside",
-            "preyType": "small mammals",
+            "flightPattern": "direct",
+            "habitat": "dry woodland",
             "observedBy": "ornithologist_02",
             "observedAt": "2024-03-17T14:30:00Z"
         },
